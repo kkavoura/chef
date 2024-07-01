@@ -1,14 +1,14 @@
 #-----------------------------------STEPS-------------------------------------------------------------------------------------------------------------------#
 class Step():
-	def __init__(self, number):
-		self._number = number
-		self._description = ""
+	def __init__(self, description):
+		# self._number = number
+		self._description = description
 		self._ingredients = []
 		self._actions = []
 
-	@property
-	def number(self):
-		return self._number
+	# @property
+	# def number(self):
+	# 	return self._number
 
 	@property
 	def description(self):

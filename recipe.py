@@ -5,7 +5,7 @@ class Recipe():
 		self._steps = []
 		self._tags = []
 		self._difficulty = 0
-		self._notes = ""
+		self._notes = []
 
 	@property
 	def name(self):
@@ -41,16 +41,19 @@ class Recipe():
 
 
 	def add_ingredient(self, new_ingredient):
-			self._ingredients.append(new_ingredient)
+		self._ingredients.append(new_ingredient)
 
 	def remove_ingredient(self, new_ingredient):
-			self._ingredients.remove(new_ingredient)
+		self._ingredients.remove(new_ingredient)
 
 	def add_step(self, step):
 		self.steps.append(step)
 
 	def add_tag(self, tag_text):
 		self.tags.append(tag_text)
+
+	def add_note(self, note_text):
+		self.notes.append(note_text)
 
 
 #------------------PRINT------------------------------------------------------
@@ -62,10 +65,16 @@ class Recipe():
 			print(" -" + ingredient.name)
 		print()
 		for step in self._steps:
-			print(str(step.number) + ". "+step.description)
+			print("Step x: " + step.description)
 		print()
-		print("Notes: " + self.notes)
+		for note in self.notes:
+			print("Notes: " + note)
+
 		print()
 		print("Tags: ")
 		for tag in self.tags:
 			print(" -" + tag)
+
+
+
+	# be consistent in how attributes are called self._attr or self.attr
