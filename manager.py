@@ -1,6 +1,7 @@
 from recipe import Recipe
 from ingredients import Ingredient
 from steps import Step
+from coordinate import Coordinate
 
 class Manager():
 	def __init__(self):
