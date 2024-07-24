@@ -2,6 +2,7 @@ from recipe import Recipe
 from ingredients import Ingredient
 from steps import Step
 from coordinate import Coordinate
+from typing import Type
 
 class Manager():
 	def __init__(self):
@@ -32,13 +33,25 @@ class Manager():
 		return current_recipe
 
 	#create new Ingredient object
-	def create_new_ingredient(self, ingredient):
+	def create_new_ingredient(self, ingredient:str) -> Type[Ingredient]:
 		print("Creating new ingredient: " + ingredient)
 		current_ingredient = Ingredient(ingredient)
 		return current_ingredient
 
 	#create new Step object
-	def create_new_step(self, step):
-		print("Creating new step: " + step)
-		current_step = Step(step)
-		return current_step
+	def create_new_step(self, step_text:str) -> Type[Step]:
+		print("Creating new step: " + step_text)
+		self.current_step = Step(step_text)
+		self.current_step.add_step()
+		return self.current_step
+
+	def create_new_tag(self, tag_text:str) -> None:
+		print("Manager creating new tag: " + tag_text)
+
+	def create_new_note(self, note_text:str) -> None:
+		print("Manager creating new note: " + note_text)
+
+	# gets the Step class variable "counter"
+	def get_current_step_number(self) -> int:
+		print(getattr(Step, "counter"))
+		return(getattr(Step, "counter"))

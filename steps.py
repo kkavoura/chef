@@ -1,7 +1,9 @@
 #-----------------------------------STEPS-------------------------------------------------------------------------------------------------------------------#
 class Step():
+	counter = 0
+
 	def __init__(self, description):
-		# self._number = number
+		self._number = Step.counter + 1
 		self._description = description
 		self._ingredients = []
 		self._actions = []
@@ -25,5 +27,7 @@ class Step():
 	def actions(self):
 		return self._actions
 	
+	def add_step(self):
+		Step.counter += 1
 
 	

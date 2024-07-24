@@ -1,6 +1,8 @@
 import tkinter as tk
+from tkinter import ttk
 from manager import Manager
 from coordinate import Coordinate
+from steps import Step
 
 gui_manager = Manager()
 current_recipe = gui_manager.initialize_recipe()
@@ -10,7 +12,8 @@ FRAMES_BG_COLOR = "#BDE8DF"
 MAIN_WINDOW_BG_COLOR = "#85C5B7"
 LIGHTER_ACCENT_COLOR = "#FEFFF5"
 
-current_coords = Coordinate(1,1)
+current_label_coords = Coordinate(1,1)
+current_step_coords = Coordinate(1,1)
 
 
 # ------------------------------------------------- INPUT VERIFICATION ----------------------------------------------------------------------------------------------------------------------#
@@ -40,6 +43,7 @@ def add_step():
 	print("Adding step: " + step_entry.get())
 	new_step = gui_manager.create_new_step(step_entry.get())
 	current_recipe.add_step(new_step)
+	create_step_label(new_step)
 	step_entry.delete(0, tk.END)
 
 # Gets tag from Entry widget, adds it to current Recipe object and clears Entry widget
@@ -70,8 +74,25 @@ window.maxsize(screen_width, screen_height)
 window.option_add( "*font", "Cambria" )
 window.config(bg=MAIN_WINDOW_BG_COLOR)
 
+
+outer_frame = tk.Frame(window, width=1000, height=500)
+outer_frame.grid(row=0, column=0)
+outer_frame.grid_propagate(0)
+
+main_canvas  = tk.Canvas(outer_frame, bg="red")
+main_canvas.grid(row=0, column=0)
+
+scrollbar = ttk.Scrollbar(window, orient='vertical', command=main_canvas.yview)
+scrollbar.grid(row=0, column=3)
+main_canvas.configure(yscrollcommand=scrollbar.set)
+main_canvas.bind(
+    '<Configure>', lambda e: main_canvas.configure(scrollregion=main_canvas.bbox("all"))
+)
+
+
+
 #------------------- Build Input Frame -------------------------------------------------------------------------------------------------------#
-input_frame = tk.Frame(window, width=screen_width*0.29, height=500, bg=FRAMES_BG_COLOR)
+input_frame = tk.Frame(main_canvas, width=screen_width*0.29, height=500, bg=FRAMES_BG_COLOR)
 input_frame.grid(row=0, column=0, padx=8, pady=8)
 input_frame.grid_propagate(0)
 
@@ -97,7 +118,6 @@ ingredients_input_label = tk.Label(components_input_frame, text = 'Ingredients:'
 ingredients_input_label.grid(row=1, column=0, pady=(10,5))
 ingredients_entry = tk.Entry(components_input_frame)
 ingredients_entry.grid(row=1, column=1, pady=(10,5), padx=5)
-# add_ingredient_button = tk.Button(components_input_frame, width=15, text="Add Ingredient", command=lambda:[verify_ingredients_input(),add_ingredient(),refresh_display_frame()])
 add_ingredient_button = tk.Button(components_input_frame, width=15, text="Add Ingredient", command=lambda:[add_ingredient()])
 add_ingredient_button.grid(row=1, column=2, padx=5, pady=(10,5))
 
@@ -105,7 +125,7 @@ step_label = tk.Label(components_input_frame, text = 'Steps:', bg=FRAMES_BG_COLO
 step_label.grid(row=2, column=0, pady=5)
 step_entry = tk.Entry(components_input_frame)
 step_entry.grid(row=2, column=1, pady=5, padx=5)
-add_step_button = tk.Button(components_input_frame, width=15, text="Add Step", command=add_step)
+add_step_button = tk.Button(components_input_frame, width=15, text="Add Step", command=lambda:[add_step()])
 add_step_button.grid(row=2, column=2, padx=5, pady=5)
 
 note_label = tk.Label(components_input_frame, text = 'Notes:', bg=FRAMES_BG_COLOR)
@@ -129,22 +149,30 @@ test_button = tk.Button(components_input_frame, text="TEST", padx=50, pady=10, c
 test_button.grid(row=6, column=1, padx=5, pady=20)
 
 #--------------------------- Build Display Frame ------------------------------------------------------------------------------------------------------#
-display_frame = tk.Frame(window, width=screen_width*0.69, height=500, bg=FRAMES_BG_COLOR)
+display_frame = tk.Frame(main_canvas, width=screen_width*0.69, height=500, bg=FRAMES_BG_COLOR)
 display_frame.grid(row=0, column=1)
 display_frame.grid_propagate(0)
 
-# display recipe name
-recipe_name_display_label = tk.Label(display_frame, bg=FRAMES_BG_COLOR, font="Cambria 20 bold underline")
-recipe_name_display_label.grid(row=0,  column=0)
-recipe_name_display_label.grid_propagate(0)
+# # display recipe name
+# recipe_name_display_label = tk.Label(display_frame, bg=FRAMES_BG_COLOR, font="Cambria 20 bold underline")
+# recipe_name_display_label.grid(row=0,  column=0)
+# recipe_name_display_label.grid_propagate(0)
 
 ingredients_display_label = tk.Label(display_frame, font="Cambria 15 underline", bg=FRAMES_BG_COLOR, text="Ingredients", width=10, anchor="w")
 ingredients_display_label.grid(row=1,  column=0)
 
-# display ingredients - dynamic number of labels inside a frame
-ingredients_display_frame = tk.Frame(display_frame, bg=FRAMES_BG_COLOR)
+# display ingredients - dynamic number of labels inside a frame, 4 labels per row
+ingredients_display_frame = tk.Frame(display_frame, bg=MAIN_WINDOW_BG_COLOR, highlightbackground=FRAMES_BG_COLOR, highlightthickness=1)
 ingredients_display_frame.grid(row=2,  column=0, pady=10)
-recipe_name_display_label.grid_propagate(0)
+# ingredients_display_frame.grid_propagate(0)
+
+# display steps - dynamic number of steps inside a frame, 1 label per row
+steps_display_label = tk.Label(display_frame, font="Cambria 15 underline", bg=FRAMES_BG_COLOR, text="Steps", width=10)
+steps_display_label.grid(row=3, column=0)
+steps_display_frame = tk.Frame(display_frame, bg=MAIN_WINDOW_BG_COLOR)
+steps_display_frame.grid(row=4, column =0, pady=(10,0))
+
+
 
 ingredient_label_list = []
 
@@ -154,22 +182,21 @@ def get_label_coords(current_label):
 	column = current_label.grid_info()['column']
 	return(row, column)
 
-
+# ---------------------------------------------- INGREDIENTS FUNCTIONS --------------------------------------------------------------------------------------------------------#
 # given coordinates and text, creates a label with that text at those coords
-def create_label(ingredient_text, coordinates):
+def create_ingredient_label(ingredient_text, coordinates):
 	current_label = tk.Label(ingredients_display_frame, text=ingredient_text, bg=LIGHTER_ACCENT_COLOR, relief="raised")
-	# current_label.bind("<Button-1>", lambda _: [gui_manager.remove_ingredient(current_ingredient.name, current_recipe), remove_ingredient_label(current_label)])
-	current_label.bind("<Button-1>", lambda _: [current_coords.go_to_previous_coordinates()])
+	current_label.bind("<Button-1>", lambda _: [current_label_coords.go_to_previous_coordinates()])
 	current_label.bind("<Button-2>", lambda _: [get_label_coords(current_label)])	
 	current_label.bind("<Button-3>", lambda _:[remove_ingredient_label(current_label)])
 	current_label.bind("<Enter>", lambda _:[current_label.config(relief="sunken")])
 	current_label.bind("<Leave>", lambda _:[current_label.config(relief="raised")])
-	print('ccord row: ' + str(current_coords.row) + ' ccord col: ' + str(current_coords.column))
-	current_label.grid(row=current_coords.row, column=current_coords.column, pady=10, padx=10, ipady=5, ipadx=5)
+	print('ccord row: ' + str(current_label_coords.row) + ' ccord col: ' + str(current_label_coords.column))
+	current_label.grid(row=current_label_coords.row, column=current_label_coords.column, pady=10, padx=10, ipady=5, ipadx=5)
 	ingredient_label_list.append(current_label)
-	current_coords.go_to_next_coordinates()
-	# current_coords.row = new_coords[0]
-	# current_coords.column = new_coords[1]
+	current_label_coords.go_to_next_coordinates()
+	# current_label_coords.row = new_coords[0]
+	# current_label_coords.column = new_coords[1]
 	return current_label
 
 # given an ingredient label return the next label in ingredients display
@@ -184,43 +211,28 @@ def remove_ingredient_label(target_label):
 	ingredient_text = target_label['text']
 	print(ingredient_text)
 	gui_manager.remove_ingredient(ingredient_text, current_recipe)
-	current_coords.move_to_new_coords(get_label_coords(target_label))
+	current_label_coords.move_to_new_coords(get_label_coords(target_label))
 	target_label.destroy()
-	current_coords.reset()
+	current_label_coords.reset()
 	for ingredient_label in ingredients_display_frame.winfo_children():
-		ingredient_label.grid(row=current_coords.row, column=current_coords.column)
-		current_coords.go_to_next_coordinates()
+		ingredient_label.grid(row=current_label_coords.row, column=current_label_coords.column)
+		current_label_coords.go_to_next_coordinates()
 
-# reset coords to 1,1
-# for label in ingredient labels, row=cur row, col=cur col. current coords move to next
-
-
-
-
-
-
-
-
-# def save_recipe():
-# 	my_recipe_name = recipe_name.get()
-# 	if my_recipe_name == "":
-# 		print("Must enter recipe name")
-# 		return
-# 	gui_manager.save_recipe(my_recipe_name)
+# ---------------------------------------------------------- STEPS FUNCTIONS ------------------------------------------------------------------------------------------------#
+# given a step object, creates a label displaying its description
+def create_step_label(step):
+	current_label = tk.Label(steps_display_frame, text=str(step._number) + ". " + step.description, bg=LIGHTER_ACCENT_COLOR)
+	current_label.grid(row=current_step_coords.row, column=current_step_coords.column, pady=10, padx=10, ipady=5, ipadx=5)
+	current_step_coords.row += 1
 
 #------------------------------------------ Keybinds for entry widgets--------------------------------------#
 # enter data with return key
-ingredients_entry.bind("<Return>", lambda x:[add_ingredient(), create_label(current_recipe.ingredients[-1].name, current_coords)])
+ingredients_entry.bind("<Return>", lambda x:[add_ingredient(), create_ingredient_label(current_recipe.ingredients[-1].name, current_label_coords)])
+step_entry.bind("<Return>", lambda x:[add_step()])
 # step_entry.bind("<Return>", lambda x:[add_step(), refresh_display_frame()])
 
 #------------------------------------------- Run -----------------------------------------------------------#
 
-def testing_this():
-	print('test')
-
-
-
-# window.bind("<x>", lambda x: print(str(current_coords.row) +" , "+ str(current_coords.column)+ str(current_coords.go_to_previous_coordinates())))
 window.mainloop()
 
 
@@ -243,24 +255,12 @@ window.mainloop()
 # ingredients - on verification check for duplicate entry
 # search to see if it makes sense to have a class function call another class function (manager search by name) to see if this is bad practice
 # BEHAVIOR - when hitting Save it updates the display in the way that it adds the last ingredient added as a new ingredient
-# ingredient labels on hover behavior
-# don't add label when ingredient doesn't verify
 
-#create attr current position. Update current position on add or remove. When placing label place at current pos!
-# 		have main current position and temp current position. when label is removed, update temp current pos based on where removed label was. update row, col of all subsequent
-# 		labels (from label list), incrementing from temp current position
-# row change is triggering at pos x,4
-# gotta make it into dict to change vals
+
 # could make coords input adjustable so that it's a variable number of ingredients per row
-
-# Feel like this is getting very stupid and complicated. Don't need dict with values? just use the global row and column counter values
 # rename update_label_coords because it's actually not just updating but also doing the displaying
-
-#get next coord function
-
-#check how we're adding labels
-#change to adding labels properly by coord
-# nextCoord? to be use to get location for next placement
-# then after removing a label, we cycle through all the remaining labels, placing them at the correct coords. might need getnextlabel, getnextcoord
-
-# should getting previous or next coords return an updated coords object ?
+# make ingredients optional (tag? separate from tag?)
+#make create ingredient label to also take in ingredient object and extract text internally instead of just .get() text
+# consider everything being consistently singular or plural, is steps entry and ingredients entry
+# put create_ingredients_label into add_ingredient ?
+# make steps width a certain amount
