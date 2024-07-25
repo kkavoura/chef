@@ -13,9 +13,9 @@ from PyQt6.QtWidgets import (
     QStatusBar,
     QPushButton,
     QGroupBox,
-    QScrollArea
+    QScrollArea,
 )
-
+from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt, pyqtSignal
 from manager import Manager
 from typing import Callable, Type
@@ -28,6 +28,17 @@ class Window(QMainWindow):
 
     def __init__(self):
         super().__init__(parent=None)
+
+        #REMOVE THIS
+        guiManager.initialize_recipe()
+
+        menubar = self.menuBar()
+        recipeMenu = menubar.addMenu("Recipe")
+        newRecipeAction = QAction("New Recipe", self)
+        newRecipeAction.triggered.connect(guiManager.initialize_recipe)
+        recipeMenu.addAction(newRecipeAction)
+
+
 
         # Create widgets
         self.centralWidget = QWidget()
@@ -97,9 +108,11 @@ class Window(QMainWindow):
         self.inputWidgetLayoutV.addWidget(self._createDataInputRow("Steps: ", "Add Step", self._addStep))
         self.inputWidgetLayoutV.addWidget(self._createDataInputRow("Notes: ", "Add Note", self._addNote))
         self.inputWidgetLayoutV.addWidget(self._createDataInputRow("Tags: ", "Add Tag", self._addTag))
-        # testButton = QPushButton("TEST")
-        # testButton.clicked.connect(lambda: print("TESTING"))
-        # inputWidgetLayoutV.addWidget(testButton)
+
+        saveButton = QPushButton("Save Recipe")
+        self.inputWidgetLayoutV.addWidget(saveButton)
+        saveButton.clicked.connect(guiManager.print_recipe)
+
         self.inputWidget.setLayout(self.inputWidgetLayoutV)
         return self.inputWidget
 
@@ -135,17 +148,27 @@ class Window(QMainWindow):
         guiManager.add_ingredient(ingredientText)
         label = self._createLabel(ingredientText, self.ingredientDisplayWidget)
         label.clicked.connect(lambda: self.removeLabel(self.ingredientDisplayWidgetLayoutV, label))
+        label.clicked.connect(lambda: guiManager.add_ingredient(ingredientText))
 
     # Add a step - Take input, send input to gui manager, display input
     def _addStep(self, stepText:str) -> None:
-        thisStep = guiManager.create_new_step(stepText)
-        # label = self._createLabel(str(thisStep.counter)+". "+stepText, self.stepDisplayWidget)
+        guiManager.add_step(stepText)
         label = self._createLabel(self._createStepLabelText(stepText), self.stepDisplayWidget)
         label.clicked.connect(lambda: self.removeLabel(self.stepDisplayWidgetLayoutV, label))
-        txt = self._createStepLabelText(stepText)
-######################################################### RESUME HERE
-###     create label text is passing around a method and not a str
-    # Creates text for step label
+        label.clicked.connect(lambda: guiManager.remove_step())
+        label.clicked.connect(lambda: self.updateStepNumberOnLabel())
+
+    # Iterates through step labels in stepDisplayWidget and updates the step counter on each
+    def updateStepNumberOnLabel(self) -> None:
+
+        for i in range(self.stepDisplayWidgetLayoutV.count()):
+            widget = self.stepDisplayWidgetLayoutV.itemAt(i).widget()
+            if widget is not None:
+                if isinstance(widget, QLabel):
+                    widgetText = widget.text()
+                    textNumber = widgetText.split(".")[0]
+                    widget.setText(str(i+1)+". "+widgetText.split(". ")[1])
+
     def _createStepLabelText(self, text:str)->str:
         myString = str(self._getStepNumber()) + ". " + text
         print("Creating Step Label text with input " + text + " and number " + str(self._getStepNumber()))
@@ -158,13 +181,14 @@ class Window(QMainWindow):
 
     # Add a note - Take input, send input to gui manager, display input
     def _addNote(self, noteText:str) -> None:
-        guiManager.create_new_note(noteText)
+        print("notetext is type " + str(type(noteText)))
+        guiManager.add_note(noteText)
         label = self._createLabel(noteText, self.noteDisplayWidget)
         label.clicked.connect(lambda: self.removeLabel(self.noteDisplayWidgetLayoutV, label))
 
     # Add a tag - Take input, send input to gui manager, display input
     def _addTag(self, tagText:str) -> None:
-        guiManager.create_new_tag(tagText)
+        guiManager.add_tag(tagText)
         label = self._createLabel(tagText, self.tagDisplayWidget)
         label.clicked.connect(lambda: self.removeLabel(self.tagDisplayWidgetLayoutV, label))
 
@@ -216,7 +240,6 @@ class ClickableLabel(QLabel):
 
 
 
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = Window()
@@ -229,4 +252,8 @@ if __name__ == "__main__":
 # consider how functions are passed around with button line edit pairing
 # validate input
 # actually remove ingredients from object when label is removed
+# make labels drag and drop
 
+# IMPORTANT: remove step when label is removed
+# prevent duplicates in tag, ingredient, step no (data structure?)
+# remove generated venv files, do requirements.txt

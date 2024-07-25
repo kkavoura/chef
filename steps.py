@@ -26,8 +26,16 @@ class Step():
 	@property
 	def actions(self):
 		return self._actions
+
+	@property
+	def number(self):
+		return self._number
 	
-	def add_step(self):
+	
+	def increase_step_counter(self):
 		Step.counter += 1
+
+	def remove_astep(self):
+		Step.counter -= 1
 
 	

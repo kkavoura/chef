@@ -49,11 +49,11 @@ class Recipe():
 	def add_step(self, step):
 		self.steps.append(step)
 
-	def add_tag(self, tag_text):
-		self.tags.append(tag_text)
+	def add_tag(self, tag):
+		self.tags.append(tag)
 
-	def add_note(self, note_text):
-		self.notes.append(note_text)
+	def add_note(self, note):
+		self.notes.append(note)
 
 
 #------------------PRINT------------------------------------------------------
@@ -62,18 +62,19 @@ class Recipe():
 		print()
 		print("Ingredients: ")
 		for ingredient in self._ingredients:
-			print(" -" + ingredient.name)
+			print("- " + ingredient.name)
 		print()
 		for step in self._steps:
-			print("Step x: " + step.description)
+			print("Step: "+ str(step.number) +". "+ step.description)
 		print()
+		print("Notes: ")
 		for note in self.notes:
-			print("Notes: " + note)
+			print("- " + note.text)
 
 		print()
 		print("Tags: ")
 		for tag in self.tags:
-			print(" -" + tag)
+			print("- " + tag.text)
 
 
 
