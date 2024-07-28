@@ -145,17 +145,20 @@ class Window(QMainWindow):
 
     # Add ingredient - Take input, send input to gui manager, display input
     def _addIngredient(self, ingredientText:str) -> None:
+        print(guiManager.check_duplicate_ingredient(ingredientText))
+        if guiManager.check_duplicate_ingredient(ingredientText):
+            return
         guiManager.add_ingredient(ingredientText)
         label = self._createLabel(ingredientText, self.ingredientDisplayWidget)
         label.clicked.connect(lambda: self.removeLabel(self.ingredientDisplayWidgetLayoutV, label))
-        label.clicked.connect(lambda: guiManager.add_ingredient(ingredientText))
+        label.clicked.connect(lambda: guiManager.remove_ingredient(ingredientText))
 
     # Add a step - Take input, send input to gui manager, display input
     def _addStep(self, stepText:str) -> None:
-        guiManager.add_step(stepText)
+        currentStep = guiManager.add_step(stepText)
         label = self._createLabel(self._createStepLabelText(stepText), self.stepDisplayWidget)
         label.clicked.connect(lambda: self.removeLabel(self.stepDisplayWidgetLayoutV, label))
-        label.clicked.connect(lambda: guiManager.remove_step())
+        label.clicked.connect(lambda: guiManager.remove_step(currentStep))
         label.clicked.connect(lambda: self.updateStepNumberOnLabel())
 
     # Iterates through step labels in stepDisplayWidget and updates the step counter on each
@@ -170,27 +173,25 @@ class Window(QMainWindow):
                     widget.setText(str(i+1)+". "+widgetText.split(". ")[1])
 
     def _createStepLabelText(self, text:str)->str:
-        myString = str(self._getStepNumber()) + ". " + text
-        print("Creating Step Label text with input " + text + " and number " + str(self._getStepNumber()))
+        myString = str(guiManager.get_current_step_number()) + ". " + text
+        print("Creating Step Label text with input " + text + " and number " + str(guiManager.get_current_step_number()))
         return myString
-
-    # Returns the current step number
-    def _getStepNumber(self):
-        stepNo = guiManager.get_current_step_number()
-        return stepNo
 
     # Add a note - Take input, send input to gui manager, display input
     def _addNote(self, noteText:str) -> None:
-        print("notetext is type " + str(type(noteText)))
         guiManager.add_note(noteText)
         label = self._createLabel(noteText, self.noteDisplayWidget)
         label.clicked.connect(lambda: self.removeLabel(self.noteDisplayWidgetLayoutV, label))
+        label.clicked.connect(lambda: guiManager.remove_note(noteText))
 
     # Add a tag - Take input, send input to gui manager, display input
     def _addTag(self, tagText:str) -> None:
+        if guiManager.check_duplicate_tag(tagText):
+            return
         guiManager.add_tag(tagText)
         label = self._createLabel(tagText, self.tagDisplayWidget)
         label.clicked.connect(lambda: self.removeLabel(self.tagDisplayWidgetLayoutV, label))
+        label.clicked.connect(lambda: guiManager.remove_tag(tagText))
 
     # Adds a label with given text to target widget
     def _createLabel(self, text:str, targetWidget:Type[QWidget]) -> Type[QLabel]:
@@ -257,3 +258,9 @@ if __name__ == "__main__":
 # IMPORTANT: remove step when label is removed
 # prevent duplicates in tag, ingredient, step no (data structure?)
 # remove generated venv files, do requirements.txt
+
+
+# getcurrentstepnumber - > getlaststepnumber
+
+# it won't create duplicates because of dictionary but it does still create duplicate label
+# trim whitespace

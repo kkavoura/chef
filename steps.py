@@ -30,12 +30,16 @@ class Step():
 	@property
 	def number(self):
 		return self._number
+
+	@number.setter
+	def number(self, new_number):
+		self._number = new_number
 	
 	
 	def increase_step_counter(self):
 		Step.counter += 1
 
-	def remove_astep(self):
+	def decrease_step_counter(self):
 		Step.counter -= 1
 
 	
