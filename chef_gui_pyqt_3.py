@@ -30,18 +30,18 @@ class Window(QMainWindow):
         super().__init__(parent=None)
 
         #REMOVE THIS
-        guiManager.initialize_recipe()
+        guiManager.new_recipe()
 
         menubar = self.menuBar()
         recipeMenu = menubar.addMenu("Recipe")
         newRecipeAction = QAction("New Recipe", self)
-        newRecipeAction.triggered.connect(guiManager.initialize_recipe)
         recipeMenu.addAction(newRecipeAction)
 
 
 
         # Create widgets
         self.centralWidget = QWidget()
+        # self.centralWidget.setStyleSheet("background-color: #2A324B;")
         self.inputWidget = self._createDataInputWidget()
         self.ingredientScrollArea = QScrollArea()
         self.stepScrollArea = QScrollArea()
@@ -49,10 +49,13 @@ class Window(QMainWindow):
         self.tagScrollArea = QScrollArea()
         self.displayWidget = QWidget()
         self.ingredientDisplayWidget = QGroupBox("Ingredients")
+        # self.ingredientDisplayWidget.setStyleSheet("""""")
         self.stepDisplayWidget = QGroupBox("Steps")
         self.noteDisplayWidget = QGroupBox("Notes")
         self.tagDisplayWidget = QGroupBox("Tags")
 
+        #for testing
+        self.dropTableButton = QPushButton("Drop Table")
 
         # Create layouts
         self.centralWidgetLayoutH = QHBoxLayout()
@@ -71,6 +74,10 @@ class Window(QMainWindow):
         self.displayWidgetLayoutV.addWidget(self.stepScrollArea, stretch=3)
         self.displayWidgetLayoutV.addWidget(self.noteScrollArea, stretch=2)
         self.displayWidgetLayoutV.addWidget(self.tagScrollArea, stretch=2)
+        self.inputWidgetLayoutV.addWidget(self.dropTableButton)
+
+        self.dropTableButton.clicked.connect(lambda: guiManager.empty_table())
+        self.dropTableButton.clicked.connect(lambda: guiManager.create_new_recipe())
 
 
 
@@ -96,12 +103,20 @@ class Window(QMainWindow):
         
         self.setGeometry(150, 300, 800, 500)
 
+        #bind menu items 
+        newRecipeAction.triggered.connect(lambda: guiManager.create_new_recipe())
+        newRecipeAction.triggered.connect(lambda: self.reset_interface())
+
 
     # Creates the widget where user is going to input data
     def _createDataInputWidget(self) -> Type[QWidget]:
         self.inputWidget = QWidget()
         self.inputWidget.setStyleSheet("background-color: #C7CCDB;")
         self.inputWidgetLayoutV = QVBoxLayout()
+        self.recipeNameLineEdit= QLineEdit()
+        self.recipeNameLabel = QLabel("Recipe Name")
+        self.inputWidgetLayoutV.addWidget(self.recipeNameLabel)
+        self.inputWidgetLayoutV.addWidget(self.recipeNameLineEdit)
 
         #Create rows of corresponding text, entry and buttons
         self.inputWidgetLayoutV.addWidget(self._createDataInputRow("Ingredients: ", "Add Ingredient", self._addIngredient))    
@@ -111,7 +126,7 @@ class Window(QMainWindow):
 
         saveButton = QPushButton("Save Recipe")
         self.inputWidgetLayoutV.addWidget(saveButton)
-        saveButton.clicked.connect(guiManager.print_recipe)
+        saveButton.clicked.connect(lambda: guiManager.save_recipe(self.recipeNameLineEdit.text()))
 
         self.inputWidget.setLayout(self.inputWidgetLayoutV)
         return self.inputWidget
@@ -227,6 +242,25 @@ class Window(QMainWindow):
         scrollBar = currentScrollArea.verticalScrollBar()
         scrollBar.rangeChanged.connect(lambda: scrollBar.setValue(scrollBar.maximum()))
 
+    # Clear all labels from a given layout
+    def delete_labels(self, targetLayout: Type[QVBoxLayout | QHBoxLayout]) -> None:
+        for i in reversed(range(targetLayout.count())):
+            item = targetLayout.itemAt(i)
+            widget = item.widget()
+            if isinstance(widget, QLabel):
+                self.removeLabel(targetLayout, widget)
+
+    # Resets interface by deleting all labels for current recipe. 
+    def reset_interface(self) -> None:
+        print("Resetting interface")
+        self.delete_labels(self.ingredientDisplayWidgetLayoutV)
+        self.delete_labels(self.stepDisplayWidgetLayoutV)
+        self.delete_labels(self.noteDisplayWidgetLayoutV)
+        self.delete_labels(self.tagDisplayWidgetLayoutV)
+        self.recipeNameLineEdit.setText("")
+
+
+
 
 # Custom QLabel subclass that has a click event handler
 class ClickableLabel(QLabel):
@@ -243,6 +277,13 @@ class ClickableLabel(QLabel):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    # app.setStyleSheet("""
+    #    # QGroupBox {
+    #    #      border: 2px solid gray;
+    #    #      border-radius: 5px;
+    #    #      margin-top: 1ex;
+    #    #  }
+    #    #  """)
     window = Window()
     window.show()
     sys.exit(app.exec())
@@ -264,3 +305,6 @@ if __name__ == "__main__":
 
 # it won't create duplicates because of dictionary but it does still create duplicate label
 # trim whitespace
+
+
+#dropping table needs to reset step counter

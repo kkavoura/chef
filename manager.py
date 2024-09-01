@@ -4,17 +4,15 @@ from steps import Step
 from typing import Type
 from tag import Tag
 from note import Note
+import db as db
 
 class Manager():
 	def __init__(self):
 		return
 
-	def initialize_recipe(self):
+	def new_recipe(self):
 		self.current_recipe = Recipe("")
 		print("Initializing recipe")
-
-	def save_recipe(self, recipe_name):
-		print("SAVING RECIPE WITH NAME " + recipe_name)
 
 	# given a string with an ingredient name, calls Recipe to remove that Ingredient
 	def remove_ingredient(self, ingredient: str) -> None:
@@ -30,7 +28,6 @@ class Manager():
 	#create new Step and add it to the current Recipe
 	def add_step(self, step_text:str) -> Type[Step]:
 		current_step = Step(step_text)
-		print("Creating new step: " + step_text + " and with step number: "+ str(current_step.number))
 		current_step.increase_step_counter()
 		self.current_recipe.add_step(current_step)
 		return current_step
@@ -74,8 +71,59 @@ class Manager():
 	def check_duplicate_tag(self, tag_text:str) -> bool:
 		return self.current_recipe.has_tag(tag_text)
 
+	# calls database to empty table
+	def empty_table(self):
+		db.empty_table()
+		Step.reset_step_counter()
+
+
+	# saves Recipe to db
+	def save_recipe(self, recipe_name):
+
+		self.current_recipe.name = recipe_name
+
+		# If recipe already has been saved, updates it
+		if(self.current_recipe.is_saved):
+			print("Recipe already exists in db, updating")
+			db.update_recipe(self.current_recipe.recipe_id, self.current_recipe.name)
+			return
+
+		self.current_recipe.recipe_id = db.insert_recipe(self.current_recipe.name)
+
+		for ingredient in self.current_recipe.ingredients:
+			db.insert_ingredient(ingredient, self.current_recipe.recipe_id)
+
+		for tag in self.current_recipe.tags:
+			db.insert_tag(tag, self.current_recipe.recipe_id)
+
+		for step in self.current_recipe.steps:
+			db.insert_step(step.number, step.description, self.current_recipe.recipe_id)
+
+		for note in self.current_recipe.notes:
+			db.insert_note(note, self.current_recipe.recipe_id)
+
+		db.print_out()
+		self.current_recipe.save()
+
+
+	# Initializes a new recipe. Creates a new recipe object and clears all data from interface
+	def create_new_recipe(self) -> None:
+		print("Step number before creating new recipe is " + str(Step.counter))
+		Step.reset_step_counter()
+		self.current_recipe = Recipe("")
+		for ingredient in self.current_recipe.ingredients:
+			print(type(ingredient))
 
 
 
 
-	# don't duplicate ingredients
+
+	# make sure it's not saving if a part of the recipe entry fails
+	# have function check for removed ingredients when saving
+	# if recipe has been saved, instead of not saving, update.
+	# Why is recipe name becoming blank?
+	# Recipe name is never saved! Just inserted.
+
+	# When clicked quickly, button breaks app
+
+# drop table should delete ingredients in ui

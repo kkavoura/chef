@@ -13,6 +13,8 @@ class Recipe():
 		self._tags = {}
 		self._difficulty = 0
 		self._notes = {}
+		self._is_saved = False
+		self._recipe_id = 0
 
 	@property
 	def name(self):
@@ -44,6 +46,22 @@ class Recipe():
 	@notes.setter
 	def notes(self, notes_text):
 		self._notes = notes_text
+
+	@property
+	def is_saved(self):
+		return self._is_saved
+
+	def save(self):
+		self._is_saved = True
+
+	@property
+	def recipe_id(self):
+		return self._recipe_id
+
+	@recipe_id.setter
+	def recipe_id(self, new_value):
+		self._recipe_id = new_value
+
 
 	def add_ingredient(self, new_ingredient:type[Ingredient]) -> None:
 		self._ingredients[new_ingredient.name] = new_ingredient
@@ -117,3 +135,4 @@ class Recipe():
 
 	# be consistent in how attributes are called self._attr or self.attr
 	# keep calling attr with _attr or .attr consistent
+	# Why are ingredients, tags and notes dictionaries?

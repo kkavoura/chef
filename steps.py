@@ -42,4 +42,11 @@ class Step():
 	def decrease_step_counter(self):
 		Step.counter -= 1
 
+	@classmethod
+	def reset_step_counter(cls):
+		print("Resetting step counter")
+		cls.counter = 0
+
+	#maybe counter and number should not be interchangeable ? whats going on there
+
 	
